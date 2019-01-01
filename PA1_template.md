@@ -19,7 +19,8 @@ the dataset with the filename "activity.csv" in the zip file "activity.zip". We
 unzip the file, load the dataset and convert the date column into the date class
 in R.
 
-```{r}
+
+```r
 unzip("activity.zip")
 data <- read.csv("activity.csv")
 data$date <- as.Date(data$date)
@@ -30,7 +31,8 @@ make it a factor class, change the labels into POSIXct format, then convert the
 class back into POSIXct. Note that this also inserts the current date into the
 interval column, but this doesn't matter as we'll only use the times.
 
-```{r}
+
+```r
 data$interval <- as.factor(data$interval)
 first_interval <- strptime("00:00", format = "%H:%M")
 last_interval <- strptime("23:55", format = "%H:%M")
@@ -44,8 +46,29 @@ data$interval <- as.POSIXct(data$interval)
 Using the dplyr package, we group the data by day, and generate a histogram of
 the total number of steps taken per day, ignoring NA values.
 
-```{r}
+
+```r
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 by_day <- data %>% group_by(date) %>% 
         summarise(total_steps = sum(steps, na.rm = TRUE))
 hist(by_day$total_steps, 
@@ -54,9 +77,17 @@ hist(by_day$total_steps,
      ylab = "Frequency (number of days)")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 We then calculate and report the median and mean number of steps taken per day.
-```{r}
+
+```r
 summary(by_day$total_steps)[3:4]
+```
+
+```
+##   Median     Mean 
+## 10395.00  9354.23
 ```
 
 ## What is the average daily activity pattern?
@@ -65,7 +96,8 @@ We then group the data by time intervals, and generate a time series plot of the
 average number of steps taken (averaged across all days for each time interval),
 ignoring NA values.
 
-```{r}
+
+```r
 by_time <- data %>% group_by(interval) %>% 
         summarise (avg_steps = mean(steps, na.rm = TRUE))
 with(by_time, plot(interval, avg_steps, type="l",
@@ -74,20 +106,32 @@ with(by_time, plot(interval, avg_steps, type="l",
                    ylab = "Average number of steps (averaged across all days)"))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 We then calculate and print the starting time (in 24h format) of the interval
 with the maximum number of steps (when averaged across all days).
 
-```{r}
+
+```r
 max_interval <- which.max(by_time$avg_steps)
 format(by_time$interval[max_interval], "%H:%M")
+```
+
+```
+## [1] "08:35"
 ```
 
 ## Imputing missing values
 
 We first count and report the number of rows with NAs in the "steps" column.
 
-```{r}
+
+```r
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 We create a new dataset based on the original dataset, except that for each row 
@@ -97,7 +141,8 @@ does not have an NA value. E.g. if X is at time interval "08:00", we give X the
 number of steps equal to the mean of the number of steps at "08:00", averaged
 across all days, ignoring all NA values.
 
-```{r}
+
+```r
 data2 <- data
 for (n in 1:nrow(data2)) {
         if (is.na(data2$steps[n])) {
@@ -108,7 +153,8 @@ for (n in 1:nrow(data2)) {
 ```
 
 We use this new dataset to make a histogram of the total number of steps per day.
-```{r}
+
+```r
 by_day2 <- data2 %>% group_by(date) %>% 
         summarise(total_steps = sum(steps, na.rm = TRUE))
 hist(by_day2$total_steps, 
@@ -117,10 +163,18 @@ hist(by_day2$total_steps,
      ylab = "Frequency (number of days)")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 We also use this new dataset to calculate and report the mean and median number
 of steps taken per day.
-```{r}
+
+```r
 summary(by_day2$total_steps)[3:4]
+```
+
+```
+##   Median     Mean 
+## 10766.19 10766.19
 ```
 
 By comparing this new histogram, and new median/mean figures with the ones
@@ -144,7 +198,8 @@ the distribution becoming more symmetrical (as in Point 1).
 We first create a new factor variable indicating whether each day happens on a
 weekday or weekend, using the new dataset.
 
-```{r}
+
+```r
 weekend <- c("Saturday", "Sunday")
 is.weekday <- function(x) {
         ifelse(x %in% weekend, "weekend", "weekday")
@@ -155,7 +210,8 @@ data2$day <- as.factor(data2$day)
 
 Then, we group the rows by (1) weekday vs. weekend, and (2) time interval.
 
-```{r}
+
+```r
 by_weekday <- data2 %>% group_by(day, interval) %>% 
         summarise(avg_steps = mean(steps))
 ```
@@ -164,7 +220,8 @@ We use ggplot to run a panel plot of the average number of steps taken across
 time intervals, differentiating between weekdays and weekends. The scales
 package is needed to format the x-axis tick labels.
 
-```{r}
+
+```r
 library(ggplot2)
 library(scales)
 ggplot(by_weekday, aes(interval, avg_steps)) + geom_line() + 
@@ -174,3 +231,5 @@ ggplot(by_weekday, aes(interval, avg_steps)) + geom_line() +
              y = "Average number of steps 
              (averaged across all weekend/weekday days)")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
